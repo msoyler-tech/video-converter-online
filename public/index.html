@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Dönüştürücü</title>
+    <title>Video Dönüştürücü - MP4 Focus</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .loader {
@@ -23,7 +23,7 @@
                 <svg class="w-10 h-10 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                 </svg>
-                <h1 class="text-3xl font-bold text-white">TS Video Dönüştürücü</h1>
+                <h1 class="text-3xl font-bold text-white">TS to MP4 Converter</h1>
             </div>
 
             <div id="uploadSection" class="border-2 border-dashed border-purple-400/50 rounded-xl p-8 text-center hover:border-purple-400 transition-colors cursor-pointer mb-6">
@@ -34,43 +34,30 @@
                 <p class="text-white text-lg mb-2">
                     <span id="fileName">.TS dosyası seçin veya sürükleyin</span>
                 </p>
-                <p class="text-purple-300 text-sm">Transport Stream (.ts) formatı desteklenmektedir</p>
+                <p class="text-purple-300 text-sm">Sadece .ts formatı desteklenmektedir</p>
             </div>
 
             <div id="statusMessage" class="hidden mb-6"></div>
 
-            <div id="formatSection" class="hidden mb-6">
-                <h2 class="text-xl font-semibold text-white mb-4">Hangi formata dönüştürmek istersiniz?</h2>
-                <div class="grid md:grid-cols-2 gap-4 mb-4">
-                    <button id="mp4Btn" class="format-btn p-6 rounded-xl border-2 border-white/20 bg-white/5 hover:border-white/40 transition-all">
+            <div id="formatSection" class="hidden mb-6 text-center">
+                <h2 class="text-xl font-semibold text-white mb-4 text-left">Dönüştürme Formatı</h2>
+                <div class="grid grid-cols-1 gap-4 mb-6">
+                    <button id="mp4Btn" class="p-6 rounded-xl border-2 border-purple-500 bg-purple-500/20 transition-all text-left">
                         <div class="flex items-center justify-between mb-2">
                             <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
                             </svg>
-                            <div class="w-6 h-6 rounded-full border-2 border-white/40 checkbox"></div>
+                            <div class="w-6 h-6 rounded-full border-2 border-purple-500 bg-purple-500 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
                         </div>
-                        <h3 class="text-white font-bold text-lg mb-1">MP4 Format</h3>
-                        <p class="text-purple-300 text-sm">H.264 codec ile sıkıştırılmış video</p>
-                    </button>
-
-                    <button id="yuvBtn" class="format-btn p-6 rounded-xl border-2 border-white/20 bg-white/5 hover:border-white/40 transition-all">
-                        <div class="flex items-center justify-between mb-2">
-                            <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                            </svg>
-                            <div class="w-6 h-6 rounded-full border-2 border-white/40 checkbox"></div>
-                        </div>
-                        <h3 class="text-white font-bold text-lg mb-1">YUV Format</h3>
-                        <p class="text-purple-300 text-sm">Ham YUV420p formatı</p>
+                        <h3 class="text-white font-bold text-lg mb-1">MP4 (H.264)</h3>
+                        <p class="text-purple-300 text-sm">Ücretsiz sunucular için en iyi performans</p>
                     </button>
                 </div>
 
-                <button id="selectBothBtn" class="w-full py-3 rounded-lg border-2 border-purple-500/50 bg-purple-500/10 text-white font-medium hover:bg-purple-500/20 transition-all mb-4">
-                    Her İkisini de Seç
-                </button>
-
-                <button id="convertBtn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                    Dönüştür
+                <button id="convertBtn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-purple-700 hover:to-pink-700 transition-all">
+                    Dönüştürmeyi Başlat
                 </button>
             </div>
 
@@ -87,22 +74,20 @@
                         <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        Dönüştürme Tamamlandı!
+                        İşlem Tamamlandı!
                     </h2>
                     <div id="downloadLinks" class="space-y-3"></div>
-                    <button id="newConversionBtn" class="w-full mt-4 py-3 rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-all">
-                        Yeni Dönüştürme
+                    <button onclick="location.reload()" class="w-full mt-4 py-3 rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-all">
+                        Yeni Dosya Yükle
                     </button>
                 </div>
             </div>
 
             <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mt-6">
-                <h3 class="text-blue-300 font-semibold mb-2">ℹ️ Bilgi</h3>
+                <h3 class="text-blue-300 font-semibold mb-2">ℹ️ Sunucu Bilgisi</h3>
                 <ul class="text-blue-200 text-sm space-y-1">
-                    <li>• MP4: H.264 codec ile sıkıştırılmış video formatı</li>
-                    <li>• YUV: Ham YUV420p formatı (video işleme için)</li>
-                    <li>• Dönüştürme işlemi sunucuda FFmpeg ile yapılır</li>
-                    <li>• Büyük dosyalar için biraz zaman alabilir</li>
+                    <li>• Dosyalarınız indirildikten kısa süre sonra otomatik olarak silinir.</li>
+                    <li>• Ücretsiz plan nedeniyle 50MB üzerindeki dosyalar reddedilebilir.</li>
                 </ul>
             </div>
         </div>
@@ -110,24 +95,18 @@
 
     <script>
         let uploadedFile = null;
-        let selectedFormats = { mp4: false, yuv: false };
-
         const elements = {
             uploadSection: document.getElementById('uploadSection'),
             fileInput: document.getElementById('fileInput'),
             fileName: document.getElementById('fileName'),
             statusMessage: document.getElementById('statusMessage'),
             formatSection: document.getElementById('formatSection'),
-            mp4Btn: document.getElementById('mp4Btn'),
-            yuvBtn: document.getElementById('yuvBtn'),
-            selectBothBtn: document.getElementById('selectBothBtn'),
             convertBtn: document.getElementById('convertBtn'),
             progressSection: document.getElementById('progressSection'),
             progressBar: document.getElementById('progressBar'),
             progressText: document.getElementById('progressText'),
             resultsSection: document.getElementById('resultsSection'),
-            downloadLinks: document.getElementById('downloadLinks'),
-            newConversionBtn: document.getElementById('newConversionBtn')
+            downloadLinks: document.getElementById('downloadLinks')
         };
 
         elements.uploadSection.addEventListener('click', () => elements.fileInput.click());
@@ -143,132 +122,66 @@
             }
 
             elements.fileName.textContent = `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-            
             showStatus('📤 Dosya yükleniyor...', 'info');
 
             const formData = new FormData();
             formData.append('video', file);
 
             try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
+                const response = await fetch('/upload', { method: 'POST', body: formData });
                 const result = await response.json();
 
                 if (result.success) {
                     uploadedFile = result.filename;
-                    showStatus('✅ Dosya yüklendi! Format seçin.', 'success');
+                    showStatus('✅ Yüklendi! Dönüştürmeye hazır.', 'success');
                     elements.formatSection.classList.remove('hidden');
                 } else {
-                    showStatus('❌ Yükleme hatası', 'error');
+                    showStatus('❌ Yükleme hatası: ' + result.error, 'error');
                 }
             } catch (err) {
                 showStatus('❌ Sunucu bağlantı hatası', 'error');
             }
         }
 
-        elements.mp4Btn.addEventListener('click', () => toggleFormat('mp4'));
-        elements.yuvBtn.addEventListener('click', () => toggleFormat('yuv'));
-        elements.selectBothBtn.addEventListener('click', () => {
-            selectedFormats.mp4 = true;
-            selectedFormats.yuv = true;
-            updateFormatButtons();
-        });
-
-        function toggleFormat(format) {
-            selectedFormats[format] = !selectedFormats[format];
-            updateFormatButtons();
-        }
-
-        function updateFormatButtons() {
-            updateButton(elements.mp4Btn, selectedFormats.mp4, 'blue');
-            updateButton(elements.yuvBtn, selectedFormats.yuv, 'green');
-        }
-
-        function updateButton(btn, selected, color) {
-            const checkbox = btn.querySelector('.checkbox');
-            if (selected) {
-                btn.classList.add(`border-${color}-500`, `bg-${color}-500/20`);
-                btn.classList.remove('border-white/20', 'bg-white/5');
-                checkbox.classList.add(`border-${color}-500`, `bg-${color}-500`);
-                checkbox.innerHTML = '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
-            } else {
-                btn.classList.remove(`border-${color}-500`, `bg-${color}-500/20`);
-                btn.classList.add('border-white/20', 'bg-white/5');
-                checkbox.classList.remove(`border-${color}-500`, `bg-${color}-500`);
-                checkbox.innerHTML = '';
-            }
-        }
-
-        elements.convertBtn.addEventListener('click', handleConvert);
-
-        async function handleConvert() {
-            if (!selectedFormats.mp4 && !selectedFormats.yuv) {
-                showStatus('❌ Lütfen en az bir format seçin', 'error');
-                return;
-            }
-
+        elements.convertBtn.addEventListener('click', async () => {
             elements.formatSection.classList.add('hidden');
             elements.progressSection.classList.remove('hidden');
-            
-            const results = [];
+            elements.progressBar.style.width = '30%';
+            elements.progressText.textContent = 'MP4 dönüştürülüyor (FFmpeg)...';
 
             try {
-                if (selectedFormats.mp4) {
-                    await convertFormat('mp4', results);
-                }
-                if (selectedFormats.yuv) {
-                    await convertFormat('yuv', results);
-                }
+                const response = await fetch('/convert/mp4', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: uploadedFile })
+                });
 
-                showResults(results);
+                const result = await response.json();
+
+                if (result.success) {
+                    elements.progressBar.style.width = '100%';
+                    showResults(result.downloadUrl, result.filename);
+                } else {
+                    throw new Error(result.error);
+                }
             } catch (err) {
-                showStatus('❌ Dönüştürme hatası: ' + err.message, 'error');
+                showStatus('❌ Hata: ' + err.message, 'error');
                 elements.progressSection.classList.add('hidden');
             }
-        }
+        });
 
-        async function convertFormat(format, results) {
-            elements.progressText.textContent = `${format.toUpperCase()} formatına dönüştürülüyor...`;
-            
-            const response = await fetch(`/convert/${format}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ filename: uploadedFile })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                results.push({ format: format.toUpperCase(), url: result.downloadUrl, filename: result.filename });
-                const progress = (results.length / (selectedFormats.mp4 && selectedFormats.yuv ? 2 : 1)) * 100;
-                elements.progressBar.style.width = progress + '%';
-            } else {
-                throw new Error(result.error);
-            }
-        }
-
-        function showResults(results) {
+        function showResults(url, filename) {
             elements.progressSection.classList.add('hidden');
             elements.resultsSection.classList.remove('hidden');
-            
-            elements.downloadLinks.innerHTML = results.map(r => `
-                <a href="${r.url}" class="block p-4 bg-white/10 rounded-lg hover:bg-white/20 transition-all">
-                    <div class="flex items-center justify-between">
-                        <span class="text-white font-medium">${r.format} - ${r.filename}</span>
-                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                        </svg>
+            elements.downloadLinks.innerHTML = `
+                <a href="${url}" class="block p-4 bg-green-500/20 border border-green-500/50 rounded-lg hover:bg-green-500/30 transition-all">
+                    <div class="flex items-center justify-between text-white">
+                        <span>📥 İndir: ${filename}</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     </div>
                 </a>
-            `).join('');
+            `;
         }
-
-        elements.newConversionBtn.addEventListener('click', () => {
-            location.reload();
-        });
 
         function showStatus(message, type) {
             const colors = {
@@ -276,7 +189,6 @@
                 success: 'bg-green-500/20 border-green-500 text-green-200',
                 info: 'bg-blue-500/20 border-blue-500 text-blue-200'
             };
-            
             elements.statusMessage.className = `p-4 rounded-lg border ${colors[type]} mb-6`;
             elements.statusMessage.textContent = message;
             elements.statusMessage.classList.remove('hidden');

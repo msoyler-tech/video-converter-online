@@ -7,6 +7,7 @@ const fs = require('fs');
 
 const app = express();
 
+// Render üzerinde FFMPEG yolunu tanımla
 if (process.env.FFMPEG_PATH) {
     ffmpeg.setFfmpegPath(process.env.FFMPEG_PATH);
 }
@@ -17,12 +18,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// Klasörlerin kontrolü ve oluşturulması
 const uploadsDir = path.join(__dirname, 'uploads');
 const outputsDir = path.join(__dirname, 'outputs');
 [uploadsDir, outputsDir].forEach(dir => {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 });
 
+// Dosya yükleme (Multer) ayarları
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadsDir),
     filename: (req, file, cb) => {
@@ -40,15 +43,14 @@ const upload = multer({
             cb(new Error('Sadece .ts dosyaları kabul edilir!'));
         }
     },
-    limits: { fileSize: 50 * 1024 * 1024 }
+    limits: { fileSize: 50 * 1024 * 1024 } // Ücretsiz plan için 50MB limit
 });
 
-// --- OTOMATİK TEMİZLEME FONKSİYONU ---
-// Bu fonksiyon 30 dakikadan eski tüm dosyaları temizler
+// --- PERİYODİK TEMİZLEME FONKSİYONU ---
 const cleanOldFiles = () => {
     const folders = [uploadsDir, outputsDir];
     const now = Date.now();
-    const expirationTime = 30 * 60 * 1000; // 30 Dakika
+    const expirationTime = 30 * 60 * 1000; // 30 Dakikadan eski dosyalar
 
     folders.forEach(folder => {
         fs.readdir(folder, (err, files) => {
@@ -58,26 +60,27 @@ const cleanOldFiles = () => {
                 fs.stat(filePath, (err, stats) => {
                     if (err) return;
                     if (now - stats.mtimeMs > expirationTime) {
-                        fs.unlink(filePath, () => console.log(`🗑️ Eski dosya silindi: ${file}`));
+                        fs.unlink(filePath, () => console.log(`🗑️ Zaman aşımına uğrayan dosya silindi: ${file}`));
                     }
                 });
             });
         });
     });
 };
+setInterval(cleanOldFiles, 15 * 60 * 1000); // 15 dakikada bir çalışır
 
-// Her 15 dakikada bir temizlik kontrolü yap
-setInterval(cleanOldFiles, 15 * 60 * 1000);
-
+// ANA SAYFA
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// DOSYA YÜKLEME ROTASI
 app.post('/upload', upload.single('video'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'Dosya yüklenemedi' });
     res.json({ success: true, filename: req.file.filename });
 });
 
+// MP4 DÖNÜŞTÜRME ROTASI (Sadece MP4 Desteklenir)
 app.post('/convert/mp4', (req, res) => {
     const { filename } = req.body;
     if (!filename) return res.status(400).json({ error: 'Dosya adı gerekli' });
@@ -87,16 +90,23 @@ app.post('/convert/mp4', (req, res) => {
     const outputPath = path.join(outputsDir, outputFilename);
 
     ffmpeg(inputPath)
-        .outputOptions(['-c:v libx264', '-preset ultrafast', '-threads 1', '-c:a aac', '-b:a 96k'])
+        .outputOptions([
+            '-c:v libx264',
+            '-preset ultrafast', // CPU tasarrufu
+            '-threads 1',        // RAM tasarrufu
+            '-c:a aac',
+            '-b:a 96k'
+        ])
         .output(outputPath)
+        .on('start', () => console.log(`🎬 İşlem başladı: ${filename}`))
         .on('end', () => {
-            // Kaynak .ts dosyasını iş biter bitmez sil (Disk tasarrufu)
-            fs.unlink(inputPath, () => console.log(`✅ Kaynak silindi: ${filename}`));
-            res.json({ success: true, downloadUrl: `/download/${outputFilename}` });
+            // Dönüştürme bitince orijinal .ts dosyasını hemen sil
+            fs.unlink(inputPath, () => console.log(`✅ Kaynak dosya temizlendi: ${filename}`));
+            res.json({ success: true, downloadUrl: `/download/${outputFilename}`, filename: outputFilename });
         })
         .on('error', (err) => {
-            console.error(err);
-            res.status(500).json({ error: 'Hata oluştu' });
+            console.error('FFmpeg Hatası:', err);
+            res.status(500).json({ error: 'Dönüştürme sırasında bir hata oluştu.' });
         })
         .run();
 });
@@ -110,14 +120,20 @@ app.get('/download/:filename', (req, res) => {
 
     res.download(filePath, (err) => {
         if (!err) {
-            // Dosya başarıyla indirildikten 5 saniye sonra sunucudan sil
+            // Kullanıcı dosyayı indirdikten 10 saniye sonra MP4'ü sil
             setTimeout(() => {
-                fs.unlink(filePath, () => console.log(`🗑️ İndirilen dosya silindi: ${filename}`));
-            }, 5000);
+                fs.unlink(filePath, () => console.log(`🗑️ İndirilen dosya sunucudan temizlendi: ${filename}`));
+            }, 10000);
         }
     });
 });
 
+// SUNUCUYU BAŞLAT
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Sunucu hazır. Port: ${PORT}`);
+    console.log(`
+    ======================================
+    🚀 MP4 CONVERTER SERVER ACTIVE
+    📍 Port: ${PORT}
+    ======================================
+    `);
 });
