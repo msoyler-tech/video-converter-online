@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Dönüştürücü - MP4 Focus</title>
+    <title>Video Dönüştürücü - Kontrollü Yükleme</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .loader {
@@ -37,25 +37,23 @@
                 <p class="text-purple-300 text-sm">Sadece .ts formatı desteklenmektedir</p>
             </div>
 
+            <div id="confirmUploadSection" class="hidden mb-6 p-4 bg-white/5 border border-white/10 rounded-xl text-center">
+                <p class="text-white mb-4">Bu dosyayı sunucuya yüklemek istiyor musunuz?</p>
+                <div class="flex gap-4 justify-center">
+                    <button id="cancelBtn" class="px-6 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-700 transition-all">Vazgeç</button>
+                    <button id="startUploadBtn" class="px-6 py-2 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 transition-all">EVET, YÜKLE</button>
+                </div>
+            </div>
+
             <div id="statusMessage" class="hidden mb-6"></div>
 
             <div id="formatSection" class="hidden mb-6 text-center">
-                <h2 class="text-xl font-semibold text-white mb-4 text-left">Dönüştürme Formatı</h2>
-                <div class="grid grid-cols-1 gap-4 mb-6">
-                    <button id="mp4Btn" class="p-6 rounded-xl border-2 border-purple-500 bg-purple-500/20 transition-all text-left">
-                        <div class="flex items-center justify-between mb-2">
-                            <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
-                            </svg>
-                            <div class="w-6 h-6 rounded-full border-2 border-purple-500 bg-purple-500 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            </div>
-                        </div>
-                        <h3 class="text-white font-bold text-lg mb-1">MP4 (H.264)</h3>
-                        <p class="text-purple-300 text-sm">Ücretsiz sunucular için en iyi performans</p>
-                    </button>
+                <div class="grid grid-cols-1 gap-4 mb-6 text-left">
+                    <div class="p-6 rounded-xl border-2 border-purple-500 bg-purple-500/20">
+                        <h3 class="text-white font-bold text-lg mb-1">MP4 (H.264) Hazır</h3>
+                        <p class="text-purple-300 text-sm">Dosya başarıyla yüklendi. Dönüştürmeye başlayabilirsiniz.</p>
+                    </div>
                 </div>
-
                 <button id="convertBtn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-purple-700 hover:to-pink-700 transition-all">
                     Dönüştürmeyi Başlat
                 </button>
@@ -69,36 +67,28 @@
             </div>
 
             <div id="resultsSection" class="hidden">
-                <div class="bg-white/5 rounded-xl p-6">
-                    <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                        <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        İşlem Tamamlandı!
-                    </h2>
+                <div class="bg-white/5 rounded-xl p-6 text-center">
+                    <h2 class="text-xl font-semibold text-white mb-4">🎉 İşlem Tamamlandı!</h2>
                     <div id="downloadLinks" class="space-y-3"></div>
                     <button onclick="location.reload()" class="w-full mt-4 py-3 rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-all">
-                        Yeni Dosya Yükle
+                        Yeni İşlem
                     </button>
                 </div>
-            </div>
-
-            <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mt-6">
-                <h3 class="text-blue-300 font-semibold mb-2">ℹ️ Sunucu Bilgisi</h3>
-                <ul class="text-blue-200 text-sm space-y-1">
-                    <li>• Dosyalarınız indirildikten kısa süre sonra otomatik olarak silinir.</li>
-                    <li>• Ücretsiz plan nedeniyle 50MB üzerindeki dosyalar reddedilebilir.</li>
-                </ul>
             </div>
         </div>
     </div>
 
     <script>
         let uploadedFile = null;
+        let selectedFile = null; // Dosyayı sadece seçip tutmak için
+
         const elements = {
             uploadSection: document.getElementById('uploadSection'),
             fileInput: document.getElementById('fileInput'),
             fileName: document.getElementById('fileName'),
+            confirmUploadSection: document.getElementById('confirmUploadSection'),
+            startUploadBtn: document.getElementById('startUploadBtn'),
+            cancelBtn: document.getElementById('cancelBtn'),
             statusMessage: document.getElementById('statusMessage'),
             formatSection: document.getElementById('formatSection'),
             convertBtn: document.getElementById('convertBtn'),
@@ -109,10 +99,11 @@
             downloadLinks: document.getElementById('downloadLinks')
         };
 
+        // 1. Tıklandığında dosya seçiciyi aç
         elements.uploadSection.addEventListener('click', () => elements.fileInput.click());
-        elements.fileInput.addEventListener('change', handleFileSelect);
 
-        async function handleFileSelect(e) {
+        // 2. Dosya seçildiğinde (Yüklemeden önce)
+        elements.fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
@@ -121,11 +112,26 @@
                 return;
             }
 
-            elements.fileName.textContent = `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-            showStatus('📤 Dosya yükleniyor...', 'info');
+            selectedFile = file; // Dosyayı değişkene al
+            elements.fileName.textContent = `📂 Seçildi: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            elements.confirmUploadSection.classList.remove('hidden'); // Onay butonunu göster
+            elements.statusMessage.classList.add('hidden');
+        });
+
+        // 3. Vazgeçilirse
+        elements.cancelBtn.addEventListener('click', () => {
+            location.reload();
+        });
+
+        // 4. Onay verildiğinde YÜKLEME başlasın
+        elements.startUploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            elements.confirmUploadSection.classList.add('hidden');
+            showStatus('📤 Sunucuya yükleniyor, lütfen bekleyin...', 'info');
 
             const formData = new FormData();
-            formData.append('video', file);
+            formData.append('video', selectedFile);
 
             try {
                 const response = await fetch('/upload', { method: 'POST', body: formData });
@@ -133,21 +139,22 @@
 
                 if (result.success) {
                     uploadedFile = result.filename;
-                    showStatus('✅ Yüklendi! Dönüştürmeye hazır.', 'success');
+                    showStatus('✅ Yükleme Başarılı!', 'success');
                     elements.formatSection.classList.remove('hidden');
                 } else {
-                    showStatus('❌ Yükleme hatası: ' + result.error, 'error');
+                    showStatus('❌ Yükleme Hatası: ' + result.error, 'error');
                 }
             } catch (err) {
-                showStatus('❌ Sunucu bağlantı hatası', 'error');
+                showStatus('❌ Sunucuya ulaşılamadı.', 'error');
             }
-        }
+        });
 
+        // 5. Dönüştürme Başlat
         elements.convertBtn.addEventListener('click', async () => {
             elements.formatSection.classList.add('hidden');
             elements.progressSection.classList.remove('hidden');
-            elements.progressBar.style.width = '30%';
-            elements.progressText.textContent = 'MP4 dönüştürülüyor (FFmpeg)...';
+            elements.progressBar.style.width = '50%';
+            elements.progressText.textContent = 'MP4 formatına çevriliyor...';
 
             try {
                 const response = await fetch('/convert/mp4', {
@@ -165,8 +172,7 @@
                     throw new Error(result.error);
                 }
             } catch (err) {
-                showStatus('❌ Hata: ' + err.message, 'error');
-                elements.progressSection.classList.add('hidden');
+                showStatus('❌ Dönüştürme Hatası', 'error');
             }
         });
 
@@ -174,11 +180,8 @@
             elements.progressSection.classList.add('hidden');
             elements.resultsSection.classList.remove('hidden');
             elements.downloadLinks.innerHTML = `
-                <a href="${url}" class="block p-4 bg-green-500/20 border border-green-500/50 rounded-lg hover:bg-green-500/30 transition-all">
-                    <div class="flex items-center justify-between text-white">
-                        <span>📥 İndir: ${filename}</span>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    </div>
+                <a href="${url}" class="block p-4 bg-green-500/20 border border-green-500/50 rounded-lg text-white text-center hover:bg-green-500/30 transition-all">
+                    📥 Dosyayı İndir
                 </a>
             `;
         }
