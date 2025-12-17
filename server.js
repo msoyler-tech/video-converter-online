@@ -1,123 +1,70 @@
-const express = require('express');
-const multer = require('multer');
-const ffmpeg = require('fluent-ffmpeg');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
+const uploadForm = document.getElementById('uploadForm');
+const videoInput = document.getElementById('videoInput');
+const convertMp4Btn = document.getElementById('convertMp4');
+const convertYuvBtn = document.getElementById('convertYuv');
+const statusDiv = document.getElementById('status');
+const downloadLink = document.getElementById('downloadLink');
 
-const app = express();
+let currentFilename = '';
 
-if (process.env.FFMPEG_PATH) {
-    ffmpeg.setFfmpegPath(process.env.FFMPEG_PATH);
-}
+uploadForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('video', videoInput.files[0]);
 
-const PORT = process.env.PORT || 3001;
+    statusDiv.innerText = '📤 Yükleniyor...';
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
-
-const uploadsDir = path.join(__dirname, 'uploads');
-const outputsDir = path.join(__dirname, 'outputs');
-[uploadsDir, outputsDir].forEach(dir => {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-});
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadsDir),
-    filename: (req, file, cb) => {
-        const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueName + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    fileFilter: (req, file, cb) => {
-        if (path.extname(file.originalname).toLowerCase() === '.ts') {
-            cb(null, true);
+    try {
+        const res = await fetch('/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        
+        if (data.success) {
+            currentFilename = data.filename;
+            statusDiv.innerText = '✅ Yüklendi! Şimdi format seçin.';
+            convertMp4Btn.disabled = false;
+            convertYuvBtn.disabled = false;
         } else {
-            cb(new Error('Sadece .ts dosyaları kabul edilir!'));
+            statusDiv.innerText = '❌ Yükleme hatası: ' + (data.error || 'Bilinmiyor');
         }
-    },
-    limits: { fileSize: 50 * 1024 * 1024 }
-});
-
-// --- OTOMATİK TEMİZLEME FONKSİYONU ---
-// Bu fonksiyon 30 dakikadan eski tüm dosyaları temizler
-const cleanOldFiles = () => {
-    const folders = [uploadsDir, outputsDir];
-    const now = Date.now();
-    const expirationTime = 30 * 60 * 1000; // 30 Dakika
-
-    folders.forEach(folder => {
-        fs.readdir(folder, (err, files) => {
-            if (err) return;
-            files.forEach(file => {
-                const filePath = path.join(folder, file);
-                fs.stat(filePath, (err, stats) => {
-                    if (err) return;
-                    if (now - stats.mtimeMs > expirationTime) {
-                        fs.unlink(filePath, () => console.log(`🗑️ Eski dosya silindi: ${file}`));
-                    }
-                });
-            });
-        });
-    });
+    } catch (err) {
+        statusDiv.innerText = '❌ Sunucuya bağlanılamadı.';
+    }
 };
 
-// Her 15 dakikada bir temizlik kontrolü yap
-setInterval(cleanOldFiles, 15 * 60 * 1000);
+async function convertVideo(format) {
+    statusDiv.innerText = `⚙️ ${format.toUpperCase()} formatına dönüştürülüyor... Bu işlem birkaç dakika sürebilir.`;
+    convertMp4Btn.disabled = true;
+    convertYuvBtn.disabled = true;
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+    try {
+        const res = await fetch(`/convert/${format}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: currentFilename })
+        });
 
-app.post('/upload', upload.single('video'), (req, res) => {
-    if (!req.file) return res.status(400).json({ error: 'Dosya yüklenemedi' });
-    res.json({ success: true, filename: req.file.filename });
-});
-
-app.post('/convert/mp4', (req, res) => {
-    const { filename } = req.body;
-    if (!filename) return res.status(400).json({ error: 'Dosya adı gerekli' });
-
-    const inputPath = path.join(uploadsDir, filename);
-    const outputFilename = filename.replace('.ts', '.mp4');
-    const outputPath = path.join(outputsDir, outputFilename);
-
-    ffmpeg(inputPath)
-        .outputOptions(['-c:v libx264', '-preset ultrafast', '-threads 1', '-c:a aac', '-b:a 96k'])
-        .output(outputPath)
-        .on('end', () => {
-            // Kaynak .ts dosyasını iş biter bitmez sil (Disk tasarrufu)
-            fs.unlink(inputPath, () => console.log(`✅ Kaynak silindi: ${filename}`));
-            res.json({ success: true, downloadUrl: `/download/${outputFilename}` });
-        })
-        .on('error', (err) => {
-            console.error(err);
-            res.status(500).json({ error: 'Hata oluştu' });
-        })
-        .run();
-});
-
-// İNDİRME VE SONRASINDA SİLME
-app.get('/download/:filename', (req, res) => {
-    const filename = req.params.filename;
-    const filePath = path.join(outputsDir, filename);
-
-    if (!fs.existsSync(filePath)) return res.status(404).send('Dosya bulunamadı.');
-
-    res.download(filePath, (err) => {
-        if (!err) {
-            // Dosya başarıyla indirildikten 5 saniye sonra sunucudan sil
-            setTimeout(() => {
-                fs.unlink(filePath, () => console.log(`🗑️ İndirilen dosya silindi: ${filename}`));
-            }, 5000);
+        // Hata ayıklama için: Eğer cevap JSON değilse HTML hatasını yakala
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            const textHata = await res.text();
+            console.error("Sunucu hatası:", textHata);
+            throw new Error("Sunucu JSON yerine HTML döndürdü. Muhtemelen sunucu resetlendi veya yol bulunamadı.");
         }
-    });
-});
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Sunucu hazır. Port: ${PORT}`);
-});
+        const data = await res.json();
+        if (data.success) {
+            statusDiv.innerText = '🎉 Başarıyla dönüştürüldü!';
+            downloadLink.href = data.downloadUrl;
+            downloadLink.style.display = 'block';
+            downloadLink.innerText = '📥 Dönüştürülen Videoyu İndir';
+        } else {
+            statusDiv.innerText = '❌ Dönüştürme hatası: ' + data.error;
+        }
+    } catch (err) {
+        statusDiv.innerText = '❌ Hata: ' + err.message;
+        console.error(err);
+    }
+}
+
+convertMp4Btn.onclick = () => convertVideo('mp4');
+convertYuvBtn.onclick = () => convertVideo('yuv');
